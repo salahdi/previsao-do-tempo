@@ -1,4 +1,4 @@
-package br.com.android.weatherforecast;
+package br.com.android.weatherforecast.weather;
 
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;

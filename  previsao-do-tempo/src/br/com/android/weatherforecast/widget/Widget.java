@@ -13,9 +13,9 @@ import android.util.Log;
 import android.widget.RemoteViews;
 import br.com.android.weatherforecast.R;
 import br.com.android.weatherforecast.WeatherForecast;
-import br.com.android.weatherforecast.WeatherPreferences;
-import br.com.android.weatherforecast.util.WeatherUtils;
+import br.com.android.weatherforecast.weather.WeatherPreferences;
 import br.com.android.weatherforecast.weather.WeatherSet;
+import br.com.android.weatherforecast.weather.WeatherUtils;
 
 /**
  * Classe para Gerenciamento do Widget de Previsão do Tempo
