@@ -3,7 +3,6 @@ package br.com.android.weatherforecast.weather;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
-import br.com.android.weatherforecast.util.WeatherUtils;
 
 /**
  * SAXHandler capable of extracting information out of the xml-data returned by

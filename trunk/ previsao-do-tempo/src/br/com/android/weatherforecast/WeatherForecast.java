@@ -31,13 +31,14 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
-import br.com.android.weatherforecast.util.WeatherUtils;
 import br.com.android.weatherforecast.views.SingleWeatherInfoView;
 import br.com.android.weatherforecast.weather.GoogleWeatherHandler;
 import br.com.android.weatherforecast.weather.WeatherCurrentCondition;
 import br.com.android.weatherforecast.weather.WeatherForecastCondition;
 import br.com.android.weatherforecast.weather.WeatherForecastInformation;
+import br.com.android.weatherforecast.weather.WeatherPreferences;
 import br.com.android.weatherforecast.weather.WeatherSet;
+import br.com.android.weatherforecast.weather.WeatherUtils;
 import br.com.android.weatherforecast.widget.Widget.UpdateService;
 
 /**

@@ -1,4 +1,4 @@
-package br.com.android.weatherforecast.util;
+package br.com.android.weatherforecast.weather;
 
 import android.app.AlertDialog;
 import android.content.Context;
