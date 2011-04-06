@@ -17,19 +17,19 @@ public class WeatherForecastCondition
 		String retorno = dayofWeek;
 
 		if (dayofWeek.startsWith("seg"))
-			retorno = "Seg";
+			retorno = "Segunda - Feira";
 		if (dayofWeek.startsWith("ter"))
-			retorno = "Ter";
+			retorno = "Terça - Feira";
 		if (dayofWeek.startsWith("qua"))
-			retorno = "Qua";
+			retorno = "Quarta - Feira";
 		if (dayofWeek.startsWith("qui"))
-			retorno = "Qui";
+			retorno = "Quinta - Feira";
 		if (dayofWeek.startsWith("sex"))
-			retorno = "Sex";
+			retorno = "Sexta - Feira";
 		if (dayofWeek.endsWith("b"))
-			retorno = "Sáb";
+			retorno = "Sábado";
 		if (dayofWeek.startsWith("dom"))
-			retorno = "Dom";
+			retorno = "Domingo";
 		return retorno;
 	}
 

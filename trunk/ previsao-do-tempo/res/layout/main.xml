@@ -1,87 +1,84 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout 
+<RelativeLayout 
 	xmlns:android="http://schemas.android.com/apk/res/android"
    	android:orientation="vertical"
    	android:layout_width="fill_parent"
    	android:layout_height="fill_parent"
-   	android:background="@drawable/weather_background" android:scrollbars="vertical" android:scrollbarAlwaysDrawVerticalTrack="true">
-   <TableLayout
-     	android:orientation="horizontal"
-      	android:layout_width="fill_parent"
-     	android:layout_height="wrap_content"
-      	android:stretchColumns="0">
-     	<TableRow
-        	android:layout_width="fill_parent"
-			android:layout_height="wrap_content">
-      		<EditText 
-      			android:id="@+id/edit_input"
-      			android:layout_width="wrap_content" 
-      			android:layout_height="wrap_content"
-	      		android:hint="Cidade"
-      			android:singleLine="true"/>
- 			<Button 
- 				android:id="@+id/cmd_submit"
-	      		android:layout_width="wrap_content" 
-	      		android:layout_height="wrap_content"
-	      		android:text="OK"/>
-     	</TableRow>
-   </TableLayout>
-   <ScrollView 
-		android:id="@+id/scrllvwNo1" 
+   	android:background="@drawable/weather_background">
+      		
+   	<EditText 
+      	android:id="@+id/edit_input"
+      	android:layout_toLeftOf="@+id/cmd_submit"
+      	android:layout_height="wrap_content"
+	    android:hint="Cidade" android:inputType="text" 
+	    android:layout_width="fill_parent"/>
+ 	<Button 
+ 		android:id="@+id/cmd_submit"
+	   	android:layout_width="wrap_content" 
+		android:layout_height="wrap_content"
+	    android:text="OK"
+	    android:layout_alignParentRight="true"/>
+	    <ScrollView
+   		android:id="@+id/scroll"
 		android:layout_width="fill_parent" 
-		android:layout_height="wrap_content" 
-		android:background="@drawable/weather_background">
+		android:layout_height="wrap_content"
+		android:layout_below="@+id/edit_input">
 			<TableLayout 
 				android:orientation="horizontal" 
 				android:layout_width="fill_parent" 
+				android:layout_height="wrap_content">
+				<TableRow
+					android:gravity="center_horizontal|center_vertical">
+			      	<ImageView
+			      			android:id="@+id/imgWeather"
+			      			android:src="@drawable/icon"
+			      			android:layout_width="wrap_content" 
+			      			android:layout_height="wrap_content"/>
+			      	<TableLayout>
+				 		<TextView 
+				 				android:id="@+id/weather_today_temp"
+					      		android:layout_height="wrap_content"
+					      		android:layout_width="wrap_content"
+					      		android:text="0 °C" android:textSize="25dip" android:textColor="#FFFFFF" android:textStyle="bold"/>
+					    <TextView 
+				 				android:id="@+id/weather_today_city"
+					      		android:layout_height="wrap_content"
+					      		android:layout_width="wrap_content"
+					      		android:text="Cidade"/>
+					    <TextView 
+				 				android:id="@+id/weather_today_condition"
+					      		android:layout_height="wrap_content"
+					      		android:layout_width="wrap_content"
+					      		android:text="Condição"/>
+				     </TableLayout>
+				</TableRow>
+			<TextView
+				android:id="@+id/lblProximosDias"
 				android:layout_height="wrap_content"
-				android:stretchColumns="2">
-			<TextView 
-				android:id="@+id/lblCidade" 
-				android:layout_height="wrap_content" 
-				android:layout_width="wrap_content" 
-				android:text="" 
-				android:layout_gravity="center|bottom"
-				android:gravity="center|">
-			</TextView>	
-    		<br.com.android.weatherforecast.views.SingleWeatherInfoView
-        		android:id="@+id/weather_today"
-        		android:orientation="horizontal"
-        		android:layout_width="fill_parent" 
-        		android:layout_height="wrap_content"
-        		android:paddingTop="15px"
-        		android:gravity="left|center_vertical"/>
-    		<br.com.android.weatherforecast.views.SingleWeatherInfoView 
+				android:layout_width="wrap_content"
+				android:text=""/>
+    		<br.com.android.weatherforecast.views.WeatherLine 
     			android:id="@+id/weather_1" 
-        		android:layout_width="fill_parent" 
-        		android:layout_height="wrap_content"
-        		android:paddingTop="15px"
-        		android:gravity="left|center_vertical"/>
-     		<br.com.android.weatherforecast.views.SingleWeatherInfoView 
+        		android:layout_width="wrap_content" 
+	      		android:layout_height="wrap_content"
+	      		android:gravity="center_vertical"/>
+     		<br.com.android.weatherforecast.views.WeatherLine 
      			android:id="@+id/weather_2" 
-        		android:layout_width="fill_parent" 
+        		android:layout_width="wrap_content" 
         		android:layout_height="wrap_content"
-        		android:paddingTop="15px"
-        		android:gravity="left|center_vertical"/>
-        	<br.com.android.weatherforecast.views.SingleWeatherInfoView 
+        		android:gravity="center_vertical"/>
+        	<br.com.android.weatherforecast.views.WeatherLine 
      			android:id="@+id/weather_3" 
-        		android:layout_width="fill_parent" 
+        		android:layout_width="wrap_content" 
         		android:layout_height="wrap_content"
-        		android:paddingTop="15px"
-        		android:gravity="left|center_vertical"/>
-        	<br.com.android.weatherforecast.views.SingleWeatherInfoView 
-     			android:id="@+id/weather_4" 
-        		android:layout_width="fill_parent" 
-        		android:layout_height="wrap_content"
-        		android:paddingTop="15px"
-        		android:gravity="left|center_vertical"/>
-			<TextView android:id="@+id/lblAtualizacao" 
-				android:gravity="center" 
-				android:layout_height="wrap_content" 
-				android:layout_width="wrap_content" 
-				android:text="" 
-				android:layout_gravity="center|bottom">
-			</TextView>
+        		android:gravity="center_vertical"/>
 		</TableLayout>
 	</ScrollView>
-</LinearLayout>
+	<TextView 
+				android:id="@+id/lblAtualizacao"
+				android:layout_alignParentBottom="true"
+				android:layout_centerHorizontal="true"
+		 		android:layout_height="wrap_content" 
+		 		android:layout_width="wrap_content" 
+		 		android:text="Data Atualização"/>
+</RelativeLayout>

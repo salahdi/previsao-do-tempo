@@ -1,12 +1,12 @@
 package br.com.android.weatherforecast.weather;
 
+import br.com.android.weatherforecast.R;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
-import br.com.android.weatherforecast.R;
 
 /**
  * Utilitarios
@@ -61,29 +61,21 @@ public class WeatherUtils {
 	
 	public static int getImageDrawable(String fileName) 
 	{
-    	int retorno = R.drawable.undefined;
+    	int retorno = R.drawable.partly_cloud;
     	
-		if(fileName.startsWith("partly_cloudy") || fileName.startsWith("mostly_sunny"))
-			retorno = R.drawable.party_cloud;
-		else if(fileName.startsWith("mostly_cloudy"))
-			retorno = R.drawable.mostly_cloud;
-		else if(fileName.startsWith("cloudy"))
-			retorno = R.drawable.cloudy;
-		else if(fileName.startsWith("snow"))
+		if(fileName.contains("cloudy"))
+			retorno = R.drawable.partly_cloud;
+		else if(fileName.contains("snow"))
 			retorno = R.drawable.snow;
-		else if(fileName.startsWith("partly_snow"))
-			retorno = R.drawable.partly_snow;
-		else if(fileName.startsWith("chance_of_storm"))
-			retorno = R.drawable.chance_of_storm;
+		else if(fileName.startsWith("storm"))
+			retorno = R.drawable.thunderstorm;
 		else if(fileName.contains("sunny"))
 			retorno = R.drawable.sunny;
-		else if(fileName.contains("thunderstorm"))
-			retorno = R.drawable.thunderstorm;
-		else if(fileName.contains("rain_snow"))
-			retorno = R.drawable.rain_snow;
-		else if(fileName.contains("haze"))
-			retorno = R.drawable.haze;
-		else if(fileName.contains("rain") || fileName.startsWith("mist"))
+		else if(fileName.contains("rain"))
+			retorno = R.drawable.rain;
+		else if(fileName.contains("haze") || fileName.contains("fog"))
+			retorno = R.drawable.fog;
+		else if(fileName.contains("mist"))
 			retorno = R.drawable.rain;
 		return retorno;
 	}

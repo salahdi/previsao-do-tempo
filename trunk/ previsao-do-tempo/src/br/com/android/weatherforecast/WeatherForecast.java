@@ -24,18 +24,20 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
 import android.view.KeyEvent;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.View.OnKeyListener;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.TextView;
-import br.com.android.weatherforecast.views.SingleWeatherInfoView;
+import br.com.android.weatherforecast.views.WeatherLine;
 import br.com.android.weatherforecast.weather.GoogleWeatherHandler;
 import br.com.android.weatherforecast.weather.WeatherCurrentCondition;
 import br.com.android.weatherforecast.weather.WeatherForecastCondition;
-import br.com.android.weatherforecast.weather.WeatherForecastInformation;
 import br.com.android.weatherforecast.weather.WeatherPreferences;
 import br.com.android.weatherforecast.weather.WeatherSet;
 import br.com.android.weatherforecast.weather.WeatherUtils;
@@ -72,80 +74,108 @@ public class WeatherForecast extends Activity
 	public void onStart()
 	{
 		super.onStart();
-		if (!WeatherUtils.checkInternet(this))
-			WeatherUtils.showMessage(this, "Sem Conexão");
 		weatherPref = new WeatherPreferences(getSharedPreferences("weatherPref", MODE_PRIVATE));
 		txtCidade.setText(weatherPref.getCity());
-		searchWeatherInfoOffLine();
+		update();
+	}
+	
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu)
+	{
+		super.getMenuInflater().inflate(R.menu.menu, menu);
+		return true;
+	}
+	
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item)
+	{
+		switch (item.getItemId())
+		{
+			case R.id.itmSair:
+				super.finish();
+				return true;
+			case R.id.itmAtualizar:
+				update();
+				return true;
+			default:
+				return super.onOptionsItemSelected(item);
+		}
 	}
 
+	/**
+	 * Atualiza Previsão dos Proximos Dias
+	 * @param aResourceID Identificador do Componentem que vai ser atualizado
+	 * @param aWFIS Informaçoes do Tempo
+	 * @throws MalformedURLException
+	 */
 	private void updateWeatherInfoView(int aResourceID, WeatherForecastCondition aWFIS) throws MalformedURLException
 	{
-		((SingleWeatherInfoView) findViewById(aResourceID)).setImageDrawable(getResources().getDrawable(WeatherUtils.getImageDrawable(aWFIS.getIconURL().split("/")[4])));
-		((SingleWeatherInfoView) findViewById(aResourceID)).setTempString(aWFIS.getDayofWeek() + ":\n" + aWFIS.getCondition() + " (" + aWFIS.getTempMinCelsius() + "°C/" + aWFIS.getTempMaxCelsius() + "°C)");
+		((WeatherLine) findViewById(aResourceID)).setImageDrawable(getResources().getDrawable(WeatherUtils.getImageDrawable(aWFIS.getIconURL().split("/")[4])));
+		((WeatherLine) findViewById(aResourceID)).setTempString(aWFIS.getDayofWeek() + ":\n" + aWFIS.getTempMinCelsius() + "°C/" + aWFIS.getTempMaxCelsius() + "°C");
 	}
 
-	private void updateWeatherInfoView(int aResourceID, WeatherCurrentCondition aWCIS, WeatherForecastInformation aWFI)
+	/**
+	 * Atualiza Previsão Atual
+	 * @param aWCIS Informaçoes do Tempo
+	 */
+	private void updateWeatherInfoView(WeatherCurrentCondition aWCIS)
 	{
-		((SingleWeatherInfoView) findViewById(aResourceID)).setImageDrawable(getResources().getDrawable(WeatherUtils.getImageDrawable(aWCIS.getIconURL().split("/")[4])));
-		((SingleWeatherInfoView) findViewById(aResourceID)).setTempString("Agora:\n" + aWCIS.getCondition() + " (" + aWCIS.getTempCelcius() + "°C)");
-		((TextView) findViewById(R.id.lblCidade)).setText(txtCidade.getText());
+		((ImageView) findViewById(R.id.imgWeather)).setImageDrawable(getResources().getDrawable(WeatherUtils.getImageDrawable(aWCIS.getIconURL().split("/")[4])));
+		((TextView) findViewById(R.id.weather_today_temp)).setText(aWCIS.getTempCelcius() + "°C");
+		((TextView) findViewById(R.id.weather_today_city)).setText(txtCidade.getText().toString());
+		((TextView) findViewById(R.id.weather_today_condition)).setText(aWCIS.getCondition());
+		((TextView) findViewById(R.id.lblProximosDias)).setText("Próximos Dias");
+		
 	}
 
+	/**
+	 * Reinicia Informacoes
+	 */
 	private void resetWeatherInfoViews()
 	{
-		((TextView) findViewById(R.id.lblCidade)).setText("");
-		((SingleWeatherInfoView) findViewById(R.id.weather_today)).reset();
-		((SingleWeatherInfoView) findViewById(R.id.weather_1)).reset();
-		((SingleWeatherInfoView) findViewById(R.id.weather_2)).reset();
-		((SingleWeatherInfoView) findViewById(R.id.weather_3)).reset();
-		((SingleWeatherInfoView) findViewById(R.id.weather_4)).reset();
+		((ImageView)findViewById(R.id.imgWeather)).setImageDrawable(null);
+		((TextView) findViewById(R.id.weather_today_city)).setText("Cidade");
+		((TextView) findViewById(R.id.weather_today_temp)).setText("0 °C");
+		((TextView) findViewById(R.id.weather_today_condition)).setText("Condição");
+		((WeatherLine) findViewById(R.id.weather_1)).reset();
+		((WeatherLine) findViewById(R.id.weather_2)).reset();
+		((WeatherLine) findViewById(R.id.weather_3)).reset();
 	}
 
 	private void searchWeatherInfo()
 	{
-		handler.post(new Runnable()
-		{
-			@Override
-			public void run()
-			{
-				String cityParam = txtCidade.getText().toString();
-				WeatherSet ws;
+		WeatherSet ws;
 
-				try
+		try
+		{
+			if (txtCidade.getText().toString().equals(""))
+				WeatherUtils.showMessage(WeatherForecast.this, "Informe a Cidade");
+			else
+			{
+				weatherPref.setCity(txtCidade.getText().toString());
+				ws = getWeatherSet(WeatherForecast.this, txtCidade.getText().toString());
+				if (ws != null)
 				{
-					if (cityParam.equals(""))
-						WeatherUtils.showMessage(WeatherForecast.this, "Informe a Cidade");
-					else
-					{
-						weatherPref.setCity(cityParam);
-						ws = getWeatherSet(WeatherForecast.this, cityParam);
-						if (ws != null)
-						{
-							updateWeatherInfoView(R.id.weather_today, ws.getWeatherCurrentCondition(), ws.getWeatherForecastInformation());
-							updateWeatherInfoView(R.id.weather_1, ws.getWeatherForecastConditions().get(0));
-							updateWeatherInfoView(R.id.weather_2, ws.getWeatherForecastConditions().get(1));
-							updateWeatherInfoView(R.id.weather_3, ws.getWeatherForecastConditions().get(2));
-							updateWeatherInfoView(R.id.weather_4, ws.getWeatherForecastConditions().get(3));
-							((TextView)findViewById(R.id.lblAtualizacao)).setText("Atualizado: " + new SimpleDateFormat("dd/MM/yyyy HH:mm").format(new Date(System.currentTimeMillis())));
-							weatherPref.setTime(System.currentTimeMillis());
-							WeatherForecast.this.startService(new Intent(WeatherForecast.this, UpdateService.class));
-						}
-					}
-				}
-				catch (UnknownHostException e)
-				{
-					WeatherUtils.showMessage(WeatherForecast.this, "Sem Conexão");
-					searchWeatherInfoOffLine();
-				}
-				catch (Exception e)
-				{
-					WeatherUtils.showMessage(WeatherForecast.this, e.getMessage());
-					Log.e(WeatherForecast.DEBUG_TAG, e.getMessage(), e);
-					resetWeatherInfoViews();
+					updateWeatherInfoView(ws.getWeatherCurrentCondition());
+					updateWeatherInfoView(R.id.weather_1, ws.getWeatherForecastConditions().get(1));
+					updateWeatherInfoView(R.id.weather_2, ws.getWeatherForecastConditions().get(2));
+					updateWeatherInfoView(R.id.weather_3, ws.getWeatherForecastConditions().get(3));
+					((TextView)findViewById(R.id.lblAtualizacao)).setText("Atualizado: " + new SimpleDateFormat("dd/MM/yyyy HH:mm").format(new Date(System.currentTimeMillis())));
+					WeatherForecast.this.startService(new Intent(WeatherForecast.this, UpdateService.class));
 				}
 			}
-		});
+		}
+		catch (UnknownHostException e)
+		{
+			WeatherUtils.showMessage(WeatherForecast.this, "Sem Conexão");
+			searchWeatherInfoOffLine();
+		}
+		catch (Exception e)
+		{
+			WeatherUtils.showMessage(WeatherForecast.this, e.getMessage());
+			Log.e(WeatherForecast.DEBUG_TAG, e.getMessage(), e);
+			resetWeatherInfoViews();
+		}
 	}
 
 	private void searchWeatherInfoOffLine()
@@ -154,14 +184,13 @@ public class WeatherForecast extends Activity
 
 		try
 		{
-			ws = getWeatherSetOffLine(this);
+			ws = getWeatherSetOffLine(WeatherForecast.this);
 			if (ws != null)
 			{
-				updateWeatherInfoView(R.id.weather_today, ws.getWeatherCurrentCondition(), ws.getWeatherForecastInformation());
-				updateWeatherInfoView(R.id.weather_1, ws.getWeatherForecastConditions().get(0));
-				updateWeatherInfoView(R.id.weather_2, ws.getWeatherForecastConditions().get(1));
-				updateWeatherInfoView(R.id.weather_3, ws.getWeatherForecastConditions().get(2));
-				updateWeatherInfoView(R.id.weather_4, ws.getWeatherForecastConditions().get(3));
+				updateWeatherInfoView(ws.getWeatherCurrentCondition());
+				updateWeatherInfoView(R.id.weather_1, ws.getWeatherForecastConditions().get(1));
+				updateWeatherInfoView(R.id.weather_2, ws.getWeatherForecastConditions().get(2));
+				updateWeatherInfoView(R.id.weather_3, ws.getWeatherForecastConditions().get(3));
 				((TextView)findViewById(R.id.lblAtualizacao)).setText("Atualizado:" + new SimpleDateFormat("dd/MM/yyyy HH:mm").format(weatherPref.getTime()));
 			}
 		}
@@ -196,6 +225,7 @@ public class WeatherForecast extends Activity
 		while ((line = reader.readLine()) != null)
 			xml.append(line);
 		weatherPref.setXml(xml.toString());
+		weatherPref.setTime(System.currentTimeMillis());
 		in = new ByteArrayInputStream(xml.toString().getBytes());
 		xr = SAXParserFactory.newInstance().newSAXParser().getXMLReader();
 		xr.setContentHandler(gwh);
@@ -234,6 +264,30 @@ public class WeatherForecast extends Activity
 		}
 		return ws;
 	}
+	
+	private void update()
+	{
+		Thread t; 
+		
+		progressDialog = ProgressDialog.show(WeatherForecast.this, "Aguarde", "Consultando Google Weather");
+		t = new Thread(){
+			@Override
+			public void run()
+			{
+				handler.post(new Runnable()
+				{
+					
+					@Override
+					public void run()
+					{
+						searchWeatherInfo();
+					}
+				});
+				progressDialog.dismiss();
+			}
+		};
+		t.start();
+	}
 
 	/**
 	 * Eventos da Tela
@@ -249,28 +303,26 @@ public class WeatherForecast extends Activity
 			{
 				txtCidade.setText(WeatherUtils.captalizeWords(txtCidade.getText().toString()));
 				((InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE)).hideSoftInputFromWindow(arg0.getWindowToken(), 0);
-				progressDialog = ProgressDialog.show(WeatherForecast.this, "Aguarde", "Consultando Google Weather");
-				new Thread(){
-					@Override
-					public void run()
-					{
-						searchWeatherInfo();
-						progressDialog.dismiss();
-					}
-				}.start();
+				update();
 			}
 		}
 
 		@Override
 		public boolean onKey(View arg0, int arg1, KeyEvent arg2)
 		{
-			if (arg2.getAction() == KeyEvent.ACTION_DOWN && arg2.getKeyCode() == KeyEvent.KEYCODE_ENTER)
+			boolean retorno = false;
+			
+			if(arg0.equals(txtCidade))
 			{
-				txtCidade.setText(WeatherUtils.captalizeWords(txtCidade.getText().toString()));
-				((InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE)).hideSoftInputFromWindow(arg0.getWindowToken(), 0);
-				searchWeatherInfo();
+				if (arg2.getAction() == KeyEvent.ACTION_DOWN && arg2.getKeyCode() == KeyEvent.KEYCODE_ENTER)
+				{
+					retorno = true;
+					txtCidade.setText(WeatherUtils.captalizeWords(txtCidade.getText().toString()));
+					((InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE)).hideSoftInputFromWindow(arg0.getWindowToken(), 0);
+					update();
+				}
 			}
-			return false;
+			return retorno;
 		}
 	}
 }
