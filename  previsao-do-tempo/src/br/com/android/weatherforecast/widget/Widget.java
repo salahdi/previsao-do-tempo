@@ -38,6 +38,7 @@ public class Widget extends AppWidgetProvider
 	public static class UpdateService extends Service
 	{
 		private WeatherPreferences weatherPref;
+		
 		@Override
 		public void onStart(Intent intent, int startId)
 		{
@@ -82,9 +83,9 @@ public class Widget extends AppWidgetProvider
 				updateViews.setOnClickPendingIntent(R.id.widget, pendingIntent);
 				if (weather != null)
 				{
-					updateViews.setTextViewText(R.id.definition, city + "\n" + weather.getWeatherCurrentCondition().getTempCelcius()
-							+ "°C");
-					updateViews.setImageViewResource(R.id.image, WeatherUtils.getImageDrawable(weather.getWeatherCurrentCondition().getIconURL().split("/")[4]));
+					updateViews.setTextViewText(R.id.definition, weather.getWeatherCurrentCondition().getTempCelcius() + "°C");
+					updateViews.setTextViewText(R.id.city, weatherPref.getCity());
+					updateViews.setImageViewResource(R.id.background, WeatherUtils.getImageDrawable(weather.getWeatherCurrentCondition().getIconURL().split("/")[4]));
 				}
 			}
 			catch (UnknownHostException e)
@@ -116,9 +117,9 @@ public class Widget extends AppWidgetProvider
 				updateViews.setOnClickPendingIntent(R.id.widget, pendingIntent);
 				if (weather != null)
 				{
-					updateViews.setTextViewText(R.id.definition, weatherPref.getCity() + "\n" + weather.getWeatherCurrentCondition().getTempCelcius()
-							+ "°C");
-					updateViews.setImageViewResource(R.id.image, WeatherUtils.getImageDrawable(weather.getWeatherCurrentCondition().getIconURL().split("/")[4]));
+					updateViews.setTextViewText(R.id.definition, weather.getWeatherCurrentCondition().getTempCelcius() + "°C");
+					updateViews.setTextViewText(R.id.city, weatherPref.getCity());
+					updateViews.setImageViewResource(R.id.background, WeatherUtils.getImageDrawable(weather.getWeatherCurrentCondition().getIconURL().split("/")[4]));
 				}
 			}
 			catch (Exception e)
