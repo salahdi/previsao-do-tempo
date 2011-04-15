@@ -123,7 +123,7 @@ public class WeatherForecast extends Activity
 		((ImageView) findViewById(R.id.imgWeather)).setImageDrawable(getResources().getDrawable(WeatherUtils.getImageDrawable(aWCIS.getIconURL().split("/")[4])));
 		((TextView) findViewById(R.id.weather_today_temp)).setText(aWCIS.getTempCelcius() + "°C");
 		((TextView) findViewById(R.id.weather_today_city)).setText(txtCidade.getText().toString());
-		((TextView) findViewById(R.id.weather_today_condition)).setText(aWCIS.getCondition());
+		((TextView) findViewById(R.id.weather_today_condition)).setText(aWCIS.getCondition() + "\n" + aWCIS.getWindCondition());
 		((TextView) findViewById(R.id.lblProximosDias)).setText("Próximos Dias");
 		
 	}
@@ -133,7 +133,7 @@ public class WeatherForecast extends Activity
 	 */
 	private void resetWeatherInfoViews()
 	{
-		((ImageView)findViewById(R.id.imgWeather)).setImageDrawable(null);
+		((ImageView)findViewById(R.id.imgWeather)).setImageDrawable(getResources().getDrawable(R.drawable.undefined));
 		((TextView) findViewById(R.id.weather_today_city)).setText("Cidade");
 		((TextView) findViewById(R.id.weather_today_temp)).setText("0 °C");
 		((TextView) findViewById(R.id.weather_today_condition)).setText("Condição");
@@ -174,7 +174,7 @@ public class WeatherForecast extends Activity
 		{
 			WeatherUtils.showMessage(WeatherForecast.this, e.getMessage());
 			Log.e(WeatherForecast.DEBUG_TAG, e.getMessage(), e);
-			resetWeatherInfoViews();
+			searchWeatherInfoOffLine();
 		}
 	}
 

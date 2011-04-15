@@ -32,7 +32,7 @@ public class WeatherLine extends LinearLayout
 
 	public void reset()
 	{
-		myWeatherImageView.setImageDrawable(getResources().getDrawable(R.drawable.partly_cloud));
+		myWeatherImageView.setImageDrawable(getResources().getDrawable(R.drawable.undefined));
 		myTempTextView.setText("");
 	}
 
