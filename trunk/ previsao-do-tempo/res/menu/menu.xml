@@ -10,6 +10,13 @@
 	</item>
 	<item 
 		android:visible="true" 
+		android:id="@+id/itmLocation" 
+		android:enabled="true" 
+		android:title="Localização"
+		android:icon="@android:drawable/ic_menu_mapmode">
+	</item>
+	<item 
+		android:visible="true" 
 		android:id="@+id/itmSair" 
 		android:enabled="true" 
 		android:title="Sair"
