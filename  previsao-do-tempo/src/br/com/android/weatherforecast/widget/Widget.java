@@ -13,9 +13,9 @@ import android.util.Log;
 import android.widget.RemoteViews;
 import br.com.android.weatherforecast.R;
 import br.com.android.weatherforecast.WeatherForecast;
+import br.com.android.weatherforecast.weather.WeatherIcons;
 import br.com.android.weatherforecast.weather.WeatherPreferences;
 import br.com.android.weatherforecast.weather.WeatherSet;
-import br.com.android.weatherforecast.weather.WeatherUtils;
 
 /**
  * Classe para Gerenciamento do Widget de Previsão do Tempo
@@ -85,7 +85,7 @@ public class Widget extends AppWidgetProvider
 				{
 					updateViews.setTextViewText(R.id.definition, weather.getWeatherCurrentCondition().getTempCelcius() + "°C");
 					updateViews.setTextViewText(R.id.city, weatherPref.getCity());
-					updateViews.setImageViewResource(R.id.background, WeatherUtils.getImageDrawable(weather.getWeatherCurrentCondition().getIconURL().split("/")[4]));
+					updateViews.setImageViewResource(R.id.background, WeatherIcons.getImageDrawable(weather.getWeatherCurrentCondition().getIconURL().split("/")[6]));
 				}
 			}
 			catch (UnknownHostException e)
@@ -119,7 +119,7 @@ public class Widget extends AppWidgetProvider
 				{
 					updateViews.setTextViewText(R.id.definition, weather.getWeatherCurrentCondition().getTempCelcius() + "°C");
 					updateViews.setTextViewText(R.id.city, weatherPref.getCity());
-					updateViews.setImageViewResource(R.id.background, WeatherUtils.getImageDrawable(weather.getWeatherCurrentCondition().getIconURL().split("/")[4]));
+					updateViews.setImageViewResource(R.id.background, WeatherIcons.getImageDrawable(weather.getWeatherCurrentCondition().getIconURL().split("/")[6]));
 				}
 			}
 			catch (Exception e)

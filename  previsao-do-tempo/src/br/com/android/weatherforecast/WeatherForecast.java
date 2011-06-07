@@ -7,10 +7,13 @@ import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.net.URLEncoder;
 import java.net.UnknownHostException;
 import java.nio.charset.Charset;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
+import java.util.Locale;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParserFactory;
 import org.xml.sax.InputSource;
@@ -20,6 +23,9 @@ import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
+import android.location.Address;
+import android.location.Geocoder;
+import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
@@ -38,6 +44,7 @@ import br.com.android.weatherforecast.views.WeatherLine;
 import br.com.android.weatherforecast.weather.GoogleWeatherHandler;
 import br.com.android.weatherforecast.weather.WeatherCurrentCondition;
 import br.com.android.weatherforecast.weather.WeatherForecastCondition;
+import br.com.android.weatherforecast.weather.WeatherIcons;
 import br.com.android.weatherforecast.weather.WeatherPreferences;
 import br.com.android.weatherforecast.weather.WeatherSet;
 import br.com.android.weatherforecast.weather.WeatherUtils;
@@ -58,6 +65,8 @@ public class WeatherForecast extends Activity
 	private WeatherPreferences weatherPref;
 	private ProgressDialog progressDialog;
 	private Handler handler = new Handler();
+	private LocationManager location;
+	private Geocoder geo;
 
 	@Override
 	public void onCreate(Bundle icicle)
@@ -97,8 +106,32 @@ public class WeatherForecast extends Activity
 			case R.id.itmAtualizar:
 				update();
 				return true;
+			case R.id.itmLocation:
+				searchLocation();
+				return true;
 			default:
 				return super.onOptionsItemSelected(item);
+		}
+	}
+	
+	private void searchLocation()
+	{
+		List<Address> enderecos;
+		
+		try
+		{
+			geo = new Geocoder(this, Locale.getDefault());
+			location = (LocationManager)getSystemService(LOCATION_SERVICE);
+			enderecos = geo.getFromLocation(location.getLastKnownLocation(LocationManager.NETWORK_PROVIDER).getLatitude(), location.getLastKnownLocation(LocationManager.NETWORK_PROVIDER).getLongitude(), 1);
+			if(enderecos.size() > 0)
+				txtCidade.setText(enderecos.get(0).getLocality());
+			else
+				txtCidade.setText(weatherPref.getCity());
+			update();
+		}
+		catch (IOException e) 
+		{
+			Log.e(WeatherForecast.DEBUG_TAG, e.getMessage(), e);
 		}
 	}
 
@@ -110,7 +143,7 @@ public class WeatherForecast extends Activity
 	 */
 	private void updateWeatherInfoView(int aResourceID, WeatherForecastCondition aWFIS) throws MalformedURLException
 	{
-		((WeatherLine) findViewById(aResourceID)).setImageDrawable(getResources().getDrawable(WeatherUtils.getImageDrawable(aWFIS.getIconURL().split("/")[4])));
+		((WeatherLine) findViewById(aResourceID)).setImageDrawable(getResources().getDrawable(WeatherIcons.getImageDrawable(aWFIS.getIconURL())));
 		((WeatherLine) findViewById(aResourceID)).setTempString(aWFIS.getDayofWeek() + ":\n" + aWFIS.getTempMinCelsius() + "°C/" + aWFIS.getTempMaxCelsius() + "°C");
 	}
 
@@ -120,7 +153,7 @@ public class WeatherForecast extends Activity
 	 */
 	private void updateWeatherInfoView(WeatherCurrentCondition aWCIS)
 	{
-		((ImageView) findViewById(R.id.imgWeather)).setImageDrawable(getResources().getDrawable(WeatherUtils.getImageDrawable(aWCIS.getIconURL().split("/")[4])));
+		((ImageView) findViewById(R.id.imgWeather)).setImageDrawable(getResources().getDrawable(WeatherIcons.getImageDrawable(aWCIS.getIconURL())));
 		((TextView) findViewById(R.id.weather_today_temp)).setText(aWCIS.getTempCelcius() + "°C");
 		((TextView) findViewById(R.id.weather_today_city)).setText(txtCidade.getText().toString());
 		((TextView) findViewById(R.id.weather_today_condition)).setText(aWCIS.getCondition() + "\n" + aWCIS.getWindCondition());
@@ -167,7 +200,8 @@ public class WeatherForecast extends Activity
 		}
 		catch (UnknownHostException e)
 		{
-			WeatherUtils.showMessage(WeatherForecast.this, "Sem Conexão");
+			WeatherUtils.showMessage(WeatherForecast.this, "Verifique a Conexão de Internet.");
+			Log.e(DEBUG_TAG, e.getMessage(), e);
 			searchWeatherInfoOffLine();
 		}
 		catch (Exception e)
@@ -218,7 +252,7 @@ public class WeatherForecast extends Activity
 			return ws;
 		if(weatherPref == null)
 			weatherPref = new WeatherPreferences(context.getSharedPreferences("weatherPref", MODE_PRIVATE));
-		queryString = "http://www.google.com/ig/api?weather=" + cityParam + "&hl=pt-br";
+		queryString = "http://www.google.com/ig/api?weather=" + URLEncoder.encode(cityParam, "UTF-8") + "&hl=pt-br";
 		connection = new URL(queryString.replace(" ", "%20")).openConnection();
 		connection.setConnectTimeout(1000 * 5);
 		reader = new BufferedReader(new InputStreamReader(connection.getInputStream(), Charset.forName("UTF-8")));
@@ -276,7 +310,6 @@ public class WeatherForecast extends Activity
 			{
 				handler.post(new Runnable()
 				{
-					
 					@Override
 					public void run()
 					{

@@ -1,7 +1,5 @@
 package br.com.android.weatherforecast.weather;
 
-import java.util.Calendar;
-import br.com.android.weatherforecast.R;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -60,35 +58,11 @@ public class WeatherUtils {
 		alert.show();
 	}
 	
-	public static int getImageDrawable(String fileName) 
-	{
-		boolean day = Calendar.getInstance().get(Calendar.HOUR_OF_DAY) > 6 && Calendar.getInstance().get(Calendar.HOUR_OF_DAY) < 18;
-    	int retorno = R.drawable.undefined;
-    	
-		if(fileName.startsWith("partly_cloudy") || fileName.startsWith("cloudy"))
-			retorno = day ? R.drawable.cloud:R.drawable.cloud_night;
-		else if(fileName.startsWith("mostly_cloudy"))
-			retorno = day ? R.drawable.mostly_cloudy:R.drawable.cloud_night;
-		else if(fileName.contains("rain_snow"))
-			retorno = day ? R.drawable.rain_snow:R.drawable.snow_night;
-		else if(fileName.contains("snow"))
-			retorno = day ? R.drawable.snow:R.drawable.snow_night;
-		else if(fileName.startsWith("storm"))
-			retorno = day ? R.drawable.thunderstorm:R.drawable.thunderstorm_night;
-		else if(fileName.contains("sunny"))
-			retorno = day ? R.drawable.sunny:R.drawable.sunny_night;
-		else if(fileName.contains("rain"))
-			retorno = day ? R.drawable.rain:R.drawable.rain_night;
-		else if(fileName.contains("haze") || fileName.contains("fog"))
-			retorno = day ? R.drawable.fog:R.drawable.fog_night;
-		else if(fileName.contains("mist"))
-			retorno = day ? R.drawable.rain:R.drawable.rain_night;
-		return retorno;
-	}
+	
 	
 	public static String captalizeWords(String words)
 	{
-		char[] caracteres = words.toCharArray();
+		char[] caracteres = words.toLowerCase().toCharArray();
 		
 		for (int i = 0; i < caracteres.length; i++)
 		{
@@ -98,5 +72,37 @@ public class WeatherUtils {
 			}
 		}
 		return new String(caracteres);
+	}
+	
+	public static String trataAcento(String texto)
+	{
+		//Acento Agudo
+		texto = texto.replace("á", "&aacute;");
+		texto = texto.replace("é", "&eacute;");
+		texto = texto.replace("í", "&iacute;");
+		texto = texto.replace("ó", "&oacute;");
+		texto = texto.replace("ú", "&uacute;");
+		texto = texto.replace("Á", "&Aacute;");
+		texto = texto.replace("É", "&Eacute;");
+		texto = texto.replace("Í", "&Iacute;");
+		texto = texto.replace("Ó", "&Oacute;");
+		texto = texto.replace("Ú", "&Uacute;");
+		//Acento Circunflexo
+		texto = texto.replace("â", "&acirc;");
+		texto = texto.replace("ê", "&ecirc;");
+		texto = texto.replace("î", "&icirc;");
+		texto = texto.replace("ô", "&ocirc;");
+		texto = texto.replace("û", "&ucirc;");
+		texto = texto.replace("Â", "&Acirc;");
+		texto = texto.replace("Ê", "&Ecirc;");
+		texto = texto.replace("Î", "&Icirc;");
+		texto = texto.replace("Ô", "&Ocirc;");
+		texto = texto.replace("Û", "&Ucirc;");
+		//Acento Til
+		texto = texto.replace("ã", "&atilde;");
+		texto = texto.replace("õ", "&otilde;");
+		texto = texto.replace("Ã", "&Atilde;");
+		texto = texto.replace("Õ", "&Otilde;");
+		return texto;
 	}
 }
