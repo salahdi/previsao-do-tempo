@@ -5,21 +5,19 @@
 		android:visible="true" 
 		android:id="@+id/itmAtualizar" 
 		android:enabled="true" 
-		android:title="Atualizar"
-		android:icon="@android:drawable/ic_menu_rotate">
+		android:icon="@android:drawable/ic_menu_rotate" android:title="@string/refresh"
+		android:showAsAction="ifRoom|withText">
 	</item>
 	<item 
 		android:visible="true" 
 		android:id="@+id/itmLocation" 
 		android:enabled="true" 
-		android:title="Localização"
-		android:icon="@android:drawable/ic_menu_mapmode">
+		android:icon="@android:drawable/ic_menu_mapmode" android:title="@string/location">
 	</item>
 	<item 
 		android:visible="true" 
 		android:id="@+id/itmSair" 
 		android:enabled="true" 
-		android:title="Sair"
-		android:icon="@android:drawable/ic_menu_close_clear_cancel">
+		android:icon="@android:drawable/ic_menu_close_clear_cancel" android:title="@string/exit">
 	</item>
 </menu>

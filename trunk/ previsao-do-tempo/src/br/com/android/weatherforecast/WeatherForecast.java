@@ -1,72 +1,69 @@
 package br.com.android.weatherforecast;
 
-import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLConnection;
-import java.net.URLEncoder;
-import java.net.UnknownHostException;
-import java.nio.charset.Charset;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.parsers.SAXParserFactory;
-import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
-import org.xml.sax.XMLReader;
+import java.util.concurrent.ExecutionException;
+
+import org.json.JSONException;
+
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.location.Address;
 import android.location.Geocoder;
+import android.location.Location;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.View.OnKeyListener;
 import android.view.inputmethod.InputMethodManager;
-import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 import br.com.android.weatherforecast.views.WeatherLine;
-import br.com.android.weatherforecast.weather.GoogleWeatherHandler;
 import br.com.android.weatherforecast.weather.WeatherCurrentCondition;
 import br.com.android.weatherforecast.weather.WeatherForecastCondition;
 import br.com.android.weatherforecast.weather.WeatherIcons;
 import br.com.android.weatherforecast.weather.WeatherPreferences;
 import br.com.android.weatherforecast.weather.WeatherSet;
 import br.com.android.weatherforecast.weather.WeatherUtils;
+import br.com.android.weatherforecast.weather.WundergroundDecoder;
 import br.com.android.weatherforecast.widget.Widget.UpdateService;
 
 /**
  * Classe para Gerenciamento da Aplicação de Previsão do Tempo
  * @author Felipe Cobello
- * @version 1.0
  *
  */
 public class WeatherForecast extends Activity
 {
 	public final static String DEBUG_TAG = "WEATHER_FORECAST";
 	private EditText txtCidade;
-	private Button btnOk;
+	private ImageButton btnOk;
 	private Event event = new Event();
 	private WeatherPreferences weatherPref;
-	private ProgressDialog progressDialog;
-	private Handler handler = new Handler();
 	private LocationManager location;
 	private Geocoder geo;
+	private boolean firstStart = true;
 
 	@Override
 	public void onCreate(Bundle icicle)
@@ -74,7 +71,7 @@ public class WeatherForecast extends Activity
 		super.onCreate(icicle);
 		setContentView(R.layout.main);
 		txtCidade = ((EditText) findViewById(R.id.edit_input));
-		btnOk = ((Button) findViewById(R.id.cmd_submit));
+		btnOk = ((ImageButton) findViewById(R.id.cmd_submit));
 		txtCidade.setOnKeyListener(event);
 		txtCidade.setOnClickListener(event);
 		btnOk.setOnClickListener(event);
@@ -83,15 +80,21 @@ public class WeatherForecast extends Activity
 	public void onStart()
 	{
 		super.onStart();
-		weatherPref = new WeatherPreferences(getSharedPreferences("weatherPref", MODE_PRIVATE));
-		txtCidade.setText(weatherPref.getCity());
-		update();
+		if(firstStart)
+		{
+			weatherPref = new WeatherPreferences(getSharedPreferences("weatherPref", MODE_PRIVATE));
+			txtCidade.setText(weatherPref.getCity());
+			firstStart = false;
+			update();
+		}
 	}
 	
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu)
 	{
-		super.getMenuInflater().inflate(R.menu.menu, menu);
+		MenuInflater inflater = getMenuInflater();
+		
+		inflater.inflate(R.menu.menu, menu);
 		return true;
 	}
 	
@@ -117,21 +120,26 @@ public class WeatherForecast extends Activity
 	private void searchLocation()
 	{
 		List<Address> enderecos;
-		
+		Location myLocation;
 		try
 		{
 			geo = new Geocoder(this, Locale.getDefault());
 			location = (LocationManager)getSystemService(LOCATION_SERVICE);
-			enderecos = geo.getFromLocation(location.getLastKnownLocation(LocationManager.NETWORK_PROVIDER).getLatitude(), location.getLastKnownLocation(LocationManager.NETWORK_PROVIDER).getLongitude(), 1);
+			myLocation = location.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+			if(myLocation == null)
+				myLocation = location.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+			enderecos = geo.getFromLocation(myLocation.getLatitude(), myLocation.getLongitude(), 1);
 			if(enderecos.size() > 0)
 				txtCidade.setText(enderecos.get(0).getLocality());
 			else
 				txtCidade.setText(weatherPref.getCity());
 			update();
 		}
-		catch (IOException e) 
+		catch (Exception e) 
 		{
 			Log.e(WeatherForecast.DEBUG_TAG, e.getMessage(), e);
+			WeatherUtils.showMessage(WeatherForecast.this, getString(R.string.locationErrorMsg));
+			resetWeatherInfoViews();
 		}
 	}
 
@@ -141,10 +149,10 @@ public class WeatherForecast extends Activity
 	 * @param aWFIS Informaçoes do Tempo
 	 * @throws MalformedURLException
 	 */
-	private void updateWeatherInfoView(int aResourceID, WeatherForecastCondition aWFIS) throws MalformedURLException
+	private void updateWeatherInfoView(int aResourceID, WeatherForecastCondition aWFIS)
 	{
 		((WeatherLine) findViewById(aResourceID)).setImageDrawable(getResources().getDrawable(WeatherIcons.getImageDrawable(aWFIS.getIconURL())));
-		((WeatherLine) findViewById(aResourceID)).setTempString(aWFIS.getDayofWeek() + ":\n" + aWFIS.getTempMinCelsius() + "°C/" + aWFIS.getTempMaxCelsius() + "°C");
+		((WeatherLine) findViewById(aResourceID)).setTempString(aWFIS.getDayofWeek() + "\n" + aWFIS.getCondition() + "\n" + aWFIS.getTempMin() + "°C/" + aWFIS.getTempMax() + "°C" + "\n" + getString(R.string.rain) + ": " + aWFIS.getPrecipitation());
 	}
 
 	/**
@@ -156,8 +164,8 @@ public class WeatherForecast extends Activity
 		((ImageView) findViewById(R.id.imgWeather)).setImageDrawable(getResources().getDrawable(WeatherIcons.getImageDrawable(aWCIS.getIconURL())));
 		((TextView) findViewById(R.id.weather_today_temp)).setText(aWCIS.getTempCelcius() + "°C");
 		((TextView) findViewById(R.id.weather_today_city)).setText(txtCidade.getText().toString());
-		((TextView) findViewById(R.id.weather_today_condition)).setText(aWCIS.getCondition() + "\n" + aWCIS.getWindCondition());
-		((TextView) findViewById(R.id.lblProximosDias)).setText("Próximos Dias");
+		((TextView) findViewById(R.id.weather_today_condition)).setText(aWCIS.getCondition() + "\n" + getString(R.string.wind) + " " + aWCIS.getWindCondition() + "\n" + getString(R.string.humidity) + ": " + aWCIS.getHumidity());
+		((TextView) findViewById(R.id.lblProximosDias)).setText(getString(R.string.nextDays));
 		
 	}
 
@@ -167,9 +175,9 @@ public class WeatherForecast extends Activity
 	private void resetWeatherInfoViews()
 	{
 		((ImageView)findViewById(R.id.imgWeather)).setImageDrawable(getResources().getDrawable(R.drawable.undefined));
-		((TextView) findViewById(R.id.weather_today_city)).setText("Cidade");
+		((TextView) findViewById(R.id.weather_today_city)).setText(getString(R.string.city));
 		((TextView) findViewById(R.id.weather_today_temp)).setText("0 °C");
-		((TextView) findViewById(R.id.weather_today_condition)).setText("Condição");
+		((TextView) findViewById(R.id.weather_today_condition)).setText(getString(R.string.condition));
 		((WeatherLine) findViewById(R.id.weather_1)).reset();
 		((WeatherLine) findViewById(R.id.weather_2)).reset();
 		((WeatherLine) findViewById(R.id.weather_3)).reset();
@@ -177,151 +185,113 @@ public class WeatherForecast extends Activity
 
 	private void searchWeatherInfo()
 	{
-		WeatherSet ws;
+		WeatherSet ws = null;
 
 		try
 		{
-			if (txtCidade.getText().toString().equals(""))
-				WeatherUtils.showMessage(WeatherForecast.this, "Informe a Cidade");
+			
+			if(weatherPref.getCity().equalsIgnoreCase(txtCidade.getText().toString()))
+			{
+				if((System.currentTimeMillis() - weatherPref.getLastUpdate().getTime()) > 1800000)
+				{
+					ws = getWeatherSet(txtCidade.getText().toString());
+					saveCache(ws);
+				}
+				else{
+					ws = restoreCache();
+				}
+			}
 			else
 			{
 				weatherPref.setCity(txtCidade.getText().toString());
-				ws = getWeatherSet(WeatherForecast.this, txtCidade.getText().toString());
-				if (ws != null)
-				{
-					updateWeatherInfoView(ws.getWeatherCurrentCondition());
-					updateWeatherInfoView(R.id.weather_1, ws.getWeatherForecastConditions().get(1));
-					updateWeatherInfoView(R.id.weather_2, ws.getWeatherForecastConditions().get(2));
-					updateWeatherInfoView(R.id.weather_3, ws.getWeatherForecastConditions().get(3));
-					((TextView)findViewById(R.id.lblAtualizacao)).setText("Atualizado: " + new SimpleDateFormat("dd/MM/yyyy HH:mm").format(new Date(System.currentTimeMillis())));
-					WeatherForecast.this.startService(new Intent(WeatherForecast.this, UpdateService.class));
-				}
+				ws = getWeatherSet(txtCidade.getText().toString());
+				saveCache(ws);
 			}
-		}
-		catch (UnknownHostException e)
-		{
-			WeatherUtils.showMessage(WeatherForecast.this, "Verifique a Conexão de Internet.");
-			Log.e(DEBUG_TAG, e.getMessage(), e);
-			searchWeatherInfoOffLine();
-		}
-		catch (Exception e)
-		{
-			WeatherUtils.showMessage(WeatherForecast.this, e.getMessage());
-			Log.e(WeatherForecast.DEBUG_TAG, e.getMessage(), e);
-			searchWeatherInfoOffLine();
-		}
-	}
-
-	private void searchWeatherInfoOffLine()
-	{
-		WeatherSet ws;
-
-		try
-		{
-			ws = getWeatherSetOffLine(WeatherForecast.this);
 			if (ws != null)
 			{
 				updateWeatherInfoView(ws.getWeatherCurrentCondition());
 				updateWeatherInfoView(R.id.weather_1, ws.getWeatherForecastConditions().get(1));
 				updateWeatherInfoView(R.id.weather_2, ws.getWeatherForecastConditions().get(2));
 				updateWeatherInfoView(R.id.weather_3, ws.getWeatherForecastConditions().get(3));
-				((TextView)findViewById(R.id.lblAtualizacao)).setText("Atualizado:" + new SimpleDateFormat("dd/MM/yyyy HH:mm").format(weatherPref.getTime()));
+				((TextView)findViewById(R.id.lblAtualizacao)).setText(getString(R.string.lastUpdate) + ": " + new SimpleDateFormat("dd/MM/yyyy HH:mm").format(weatherPref.getLastUpdate()));
+				WeatherForecast.this.startService(new Intent(WeatherForecast.this, UpdateService.class));
 			}
+			else
+				WeatherUtils.showMessage(WeatherForecast.this, getString(R.string.forecastNotFound));
 		}
 		catch (Exception e)
 		{
-			WeatherUtils.showMessage(this, e.getMessage());
+			WeatherUtils.showMessage(WeatherForecast.this, e.getMessage());
 			Log.e(WeatherForecast.DEBUG_TAG, e.getMessage(), e);
-			resetWeatherInfoViews();
 		}
 	}
 
-	public WeatherSet getWeatherSet(Context context, String cityParam) throws MalformedURLException, IOException, SAXException, ParserConfigurationException
+	public WeatherSet getWeatherSet(String cityParam) throws InterruptedException, ExecutionException
 	{
-		String line;
-		String queryString;
-		GoogleWeatherHandler gwh = new GoogleWeatherHandler();
-		StringBuilder xml = new StringBuilder();
-		URLConnection connection;
-		BufferedReader reader;
-		ByteArrayInputStream in;
-		XMLReader xr;
-		WeatherSet ws = null;
-
-		if (cityParam.equals(""))
-			return ws;
-		if(weatherPref == null)
-			weatherPref = new WeatherPreferences(context.getSharedPreferences("weatherPref", MODE_PRIVATE));
-		queryString = "http://www.google.com/ig/api?weather=" + URLEncoder.encode(cityParam, "UTF-8") + "&hl=pt-br";
-		connection = new URL(queryString.replace(" ", "%20")).openConnection();
-		connection.setConnectTimeout(1000 * 5);
-		reader = new BufferedReader(new InputStreamReader(connection.getInputStream(), Charset.forName("UTF-8")));
-		while ((line = reader.readLine()) != null)
-			xml.append(line);
-		weatherPref.setXml(xml.toString());
-		weatherPref.setTime(System.currentTimeMillis());
-		in = new ByteArrayInputStream(xml.toString().getBytes());
-		xr = SAXParserFactory.newInstance().newSAXParser().getXMLReader();
-		xr.setContentHandler(gwh);
-		xr.parse(new InputSource(in));
-		ws = gwh.getWeatherSet();
-		reader.close();
-		in.close();
-		connection = null;
-		reader = null;
-		in = null;
-		xr = null;
-		return ws;
-	}
-
-	public WeatherSet getWeatherSetOffLine(Context context) throws SAXException, ParserConfigurationException, IOException
-	{
-		GoogleWeatherHandler gwh = new GoogleWeatherHandler();
-		String xml;
-		ByteArrayInputStream in;
-		XMLReader xr;
-		WeatherSet ws = null;
-
-		if(weatherPref == null)
-			weatherPref = new WeatherPreferences(getSharedPreferences("weatherPref", MODE_PRIVATE));
-		xml = weatherPref.readXml();
-		if (!xml.equals(""))
-		{
-			in = new ByteArrayInputStream(xml.toString().getBytes());
-			xr = SAXParserFactory.newInstance().newSAXParser().getXMLReader();
-			xr.setContentHandler(gwh);
-			xr.parse(new InputSource(in));
-			ws = gwh.getWeatherSet();
-			in.close();
-			in = null;
-			xr = null;
-		}
-		return ws;
+		WundergroundDecoder decoder = new WundergroundDecoder(WeatherForecast.this);
+		decoder.execute(cityParam); 
+		
+		return decoder.get();
 	}
 	
 	private void update()
 	{
 		Thread t; 
+		final ProgressDialog processDialog;
+		final Handler handler = new Handler();
 		
-		progressDialog = ProgressDialog.show(WeatherForecast.this, "Aguarde", "Consultando Google Weather");
-		t = new Thread(){
-			@Override
-			public void run()
-			{
-				handler.post(new Runnable()
+		if (txtCidade.getText().toString().equals(""))
+			WeatherUtils.showMessage(WeatherForecast.this, getString(R.string.enterCity));
+		else
+		{
+			processDialog = ProgressDialog.show(WeatherForecast.this, "", getString(R.string.processMsg));
+			t = new Thread(){
+				@Override
+				public void run()
 				{
-					@Override
-					public void run()
+					handler.post(new Runnable()
 					{
-						searchWeatherInfo();
-					}
-				});
-				progressDialog.dismiss();
-			}
-		};
-		t.start();
+					@Override
+						public void run()
+						{
+							searchWeatherInfo();
+						}
+					});
+					processDialog.dismiss();
+				}
+			};
+			t.start();
+		}
 	}
+	
+	private void saveCache(WeatherSet weatherset) throws IOException
+	{
+		File cache = new File(getCacheDir(), "cache.dat");
+		ObjectOutputStream out;
 
+		out = new ObjectOutputStream(new FileOutputStream(cache));
+		out.writeObject(weatherset);
+		out.close();
+		weatherPref.setLastUpdate(new Date(System.currentTimeMillis()));
+	}
+	
+	private WeatherSet restoreCache() throws FileNotFoundException, IOException, ClassNotFoundException, JSONException, InterruptedException, ExecutionException
+	{
+		File cache = new File(getCacheDir(), "cache.dat");
+		WeatherSet ws = null;
+		ObjectInputStream out;
+		
+		if(cache.exists())
+		{
+			out = new ObjectInputStream(new FileInputStream(new File(getCacheDir(), "cache.dat")));
+			ws = (WeatherSet) out.readObject();
+			out.close();
+		}
+		if(ws == null)
+			ws = getWeatherSet(txtCidade.getText().toString());
+		return ws;
+	}
+	
 	/**
 	 * Eventos da Tela
 	 * @author Felipe Cobello

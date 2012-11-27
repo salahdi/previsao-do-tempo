@@ -1,14 +1,13 @@
 package br.com.android.weatherforecast.views;
 
-import br.com.android.weatherforecast.R;
 import android.content.Context;
 import android.graphics.Color;
-import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import br.com.android.weatherforecast.R;
 
 /**
  * Componente para Exibir o Icone + os dados do Clima
@@ -25,7 +24,6 @@ public class WeatherLine extends LinearLayout
 		myTempTextView = new TextView(context, attrs);
 		myTempTextView.setTextSize(12);
 		myTempTextView.setTextColor(Color.WHITE);
-		myTempTextView.setTypeface(Typeface.create("Tahoma", Typeface.BOLD));
 		addView(myWeatherImageView, LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
 		addView(myTempTextView, LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
 	}

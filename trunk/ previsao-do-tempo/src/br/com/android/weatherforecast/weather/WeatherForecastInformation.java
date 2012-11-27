@@ -1,7 +1,13 @@
 package br.com.android.weatherforecast.weather;
 
-public class WeatherForecastInformation
+import java.io.Serializable;
+
+public class WeatherForecastInformation implements Serializable
 {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -836325109897133077L;
 	private String city;
 	private long time;
 

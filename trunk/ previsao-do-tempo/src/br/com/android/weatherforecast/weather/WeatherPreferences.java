@@ -1,5 +1,9 @@
 package br.com.android.weatherforecast.weather;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 
@@ -10,19 +14,6 @@ public class WeatherPreferences
 	public WeatherPreferences(SharedPreferences sharedPreferences)
 	{
 		preferences = sharedPreferences;
-	}
-	
-	public void setXml(String xml)
-	{
-		Editor edit = preferences.edit();
-		
-		edit.putString("xml", xml);
-		edit.commit();
-	}
-	
-	public String readXml()
-	{
-		return preferences.getString("xml", "");
 	}
 	
 	public void setCity(String city)
@@ -38,16 +29,19 @@ public class WeatherPreferences
 		return preferences.getString("city", "");
 	}
 	
-	public void setTime(long time)
+	public void setLastUpdate(Date date)
 	{
+		SimpleDateFormat dateformat = new SimpleDateFormat("dd/MM/yyyy HH:mm");
 		Editor edit = preferences.edit();
 		
-		edit.putLong("time", time);
+		edit.putString("lastUpdate", dateformat.format(date));
 		edit.commit();
 	}
 	
-	public long getTime()
+	public Date getLastUpdate() throws ParseException
 	{
-		return preferences.getLong("time", System.currentTimeMillis());
+		SimpleDateFormat dateformat = new SimpleDateFormat("dd/MM/yyyy HH:mm");
+		
+		return dateformat.parse(preferences.getString("lastUpdate", "01/01/2000 00:00"));
 	}
 }

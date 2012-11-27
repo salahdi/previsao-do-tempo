@@ -2,10 +2,10 @@ package br.com.android.weatherforecast.weather;
 
 import android.app.AlertDialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.widget.Toast;
 
 /**
  * Utilitarios
@@ -37,28 +37,27 @@ public class WeatherUtils {
 	
 	public static void showMessage(Context context, String msg)
 	{	
-		OnClickListener listener = new OnClickListener() {
-			
-			@Override
-			public void onClick(DialogInterface dialog, int which) {
-				return;
-			}
-		};
-		
-		showMessage(context, msg, "OK", listener);
+		Toast.makeText(context, (CharSequence) msg, Toast.LENGTH_LONG).show();
+//		OnClickListener listener = new OnClickListener() {
+//			
+//			@Override
+//			public void onClick(DialogInterface dialog, int which) {
+//				return;
+//			}
+//		};
+//		
+//		showMessage(context, msg, "OK", listener);
 	}
 	
 	public static void showMessage(Context context, String msg, String button, OnClickListener listener)
 	{
 		AlertDialog alert = new AlertDialog.Builder(context).create();
 		
-		alert.setButton(button, listener);
+		alert.setButton(AlertDialog.BUTTON_NEUTRAL, button, listener);
 		alert.setMessage(msg);
 		alert.setIcon(android.R.drawable.ic_dialog_info);
 		alert.show();
 	}
-	
-	
 	
 	public static String captalizeWords(String words)
 	{
