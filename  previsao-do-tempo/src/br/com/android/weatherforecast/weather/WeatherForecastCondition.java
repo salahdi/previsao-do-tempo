@@ -1,16 +1,23 @@
 package br.com.android.weatherforecast.weather;
 
+import java.io.Serializable;
+
 /**
  * Holds the information between the <forecast_conditions>-tag of what the
  * Google Weather API returned.
  */
-public class WeatherForecastCondition
+public class WeatherForecastCondition implements Serializable
 {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 355766120744171602L;
 	private String dayofWeek = null;
 	private Integer tempMin = null;
 	private Integer tempMax = null;
 	private String iconURL = null;
 	private String condition = null;
+	private String precipitation = null;
 
 	public String getDayofWeek()
 	{
@@ -38,22 +45,22 @@ public class WeatherForecastCondition
 		this.dayofWeek = dayofWeek;
 	}
 
-	public Integer getTempMinCelsius()
+	public Integer getTempMin()
 	{
 		return tempMin;
 	}
 
-	public void setTempMinCelsius(Integer tempMin)
+	public void setTempMin(Integer tempMin)
 	{
 		this.tempMin = tempMin;
 	}
 
-	public Integer getTempMaxCelsius()
+	public Integer getTempMax()
 	{
 		return tempMax;
 	}
 
-	public void setTempMaxCelsius(Integer tempMax)
+	public void setTempMax(Integer tempMax)
 	{
 		this.tempMax = tempMax;
 	}
@@ -76,5 +83,13 @@ public class WeatherForecastCondition
 	public void setCondition(String condition)
 	{
 		this.condition = condition;
+	}
+
+	public void setPrecipitation(String precipitation) {
+		this.precipitation = precipitation;
+	}
+
+	public String getPrecipitation() {
+		return precipitation;
 	}
 }

@@ -10,9 +10,9 @@ public class WeatherIcons
 		boolean day = Calendar.getInstance().get(Calendar.HOUR_OF_DAY) > 6 && Calendar.getInstance().get(Calendar.HOUR_OF_DAY) < 18;
     	int retorno = R.drawable.undefined;
     	
-		if(fileName.contains("partlycloudy") || fileName.contains("partly_cloudy") || fileName.contains("cloudy"))
+		if(fileName.contains("partlycloudy") || fileName.contains("cloudy"))
 			retorno = day ? R.drawable.cloud:R.drawable.cloud_night;
-		if(fileName.contains("mostlycloudy") || fileName.contains("mostly_cloudy") || fileName.contains("overcast"))
+		if(fileName.contains("mostlycloudy") || fileName.contains("overcast"))
 			retorno = day ? R.drawable.mostly_cloudy:R.drawable.cloud_night;
 		if(fileName.contains("rainsnow"))
 			retorno = day ? R.drawable.rain_snow:R.drawable.snow_night;
@@ -22,11 +22,11 @@ public class WeatherIcons
 			retorno = day ? R.drawable.thunderstorm:R.drawable.thunderstorm_night;
 		if(fileName.contains("sunny"))
 			retorno = day ? R.drawable.sunny:R.drawable.sunny_night;
-		if(fileName.contains("mostlysunny") || fileName.contains("mostly_sunny"))
+		if(fileName.contains("mostlysunny") || fileName.contains("clear"))
 			retorno = day ? R.drawable.mostly_sunny:R.drawable.sunny_night;
 		if(fileName.contains("rain") || fileName.contains("scatteredshowers") || fileName.contains("drizzle"))
 			retorno = day ? R.drawable.rain:R.drawable.rain_night;
-		if(fileName.contains("haze") || fileName.contains("fog"))
+		if(fileName.contains("haz") || fileName.contains("fog"))
 			retorno = day ? R.drawable.fog:R.drawable.fog_night;
 		if(fileName.contains("mist"))
 			retorno = day ? R.drawable.rain:R.drawable.rain_night;

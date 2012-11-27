@@ -1,6 +1,5 @@
 package br.com.android.weatherforecast.widget;
 
-import java.net.UnknownHostException;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.appwidget.AppWidgetManager;
@@ -79,47 +78,13 @@ public class Widget extends AppWidgetProvider
 
 			try
 			{
-				weather = new WeatherForecast().getWeatherSet(context, city);
+				weather = new WeatherForecast().getWeatherSet(city);
 				updateViews.setOnClickPendingIntent(R.id.widget, pendingIntent);
 				if (weather != null)
 				{
 					updateViews.setTextViewText(R.id.definition, weather.getWeatherCurrentCondition().getTempCelcius() + "°C");
 					updateViews.setTextViewText(R.id.city, weatherPref.getCity());
-					updateViews.setImageViewResource(R.id.background, WeatherIcons.getImageDrawable(weather.getWeatherCurrentCondition().getIconURL().split("/")[6]));
-				}
-			}
-			catch (UnknownHostException e)
-			{
-				updateViews = updateWeatherInfoOffline(context);
-			}
-			catch (Exception e)
-			{
-				Log.e(WeatherForecast.DEBUG_TAG, e.getMessage(), e);
-			}
-			return updateViews;
-		}
-
-		/**
-		 * Retorna o {@link RemoteViews} com a Atualização do Clima Off-Line
-		 * @param context Context
-		 * @return RemoteViews
-		 */
-		private RemoteViews updateWeatherInfoOffline(Context context)
-		{
-			RemoteViews updateViews = new RemoteViews(context.getPackageName(), R.layout.widget);
-			Intent defineIntent = new Intent(context, WeatherForecast.class);
-			PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, defineIntent, 0);
-			WeatherSet weather;
-
-			try
-			{
-				weather = new WeatherForecast().getWeatherSetOffLine(context);
-				updateViews.setOnClickPendingIntent(R.id.widget, pendingIntent);
-				if (weather != null)
-				{
-					updateViews.setTextViewText(R.id.definition, weather.getWeatherCurrentCondition().getTempCelcius() + "°C");
-					updateViews.setTextViewText(R.id.city, weatherPref.getCity());
-					updateViews.setImageViewResource(R.id.background, WeatherIcons.getImageDrawable(weather.getWeatherCurrentCondition().getIconURL().split("/")[6]));
+					updateViews.setImageViewResource(R.id.background, WeatherIcons.getImageDrawable(weather.getWeatherCurrentCondition().getIconURL()));
 				}
 			}
 			catch (Exception e)
