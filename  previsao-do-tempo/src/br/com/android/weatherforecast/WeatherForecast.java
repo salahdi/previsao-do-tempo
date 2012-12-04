@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.MalformedURLException;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
@@ -24,8 +25,8 @@ import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationManager;
+import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Handler;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
@@ -63,6 +64,8 @@ public class WeatherForecast extends Activity
 	private WeatherPreferences weatherPref;
 	private LocationManager location;
 	private Geocoder geo;
+	private WeatherSet ws;
+	private WundergroundDecoder decoder;
 	private boolean firstStart = true;
 
 	@Override
@@ -80,9 +83,10 @@ public class WeatherForecast extends Activity
 	public void onStart()
 	{
 		super.onStart();
-		if(firstStart)
+		weatherPref = new WeatherPreferences(getSharedPreferences("weatherPref", MODE_PRIVATE));
+		decoder = new WundergroundDecoder(WeatherForecast.this);
+		if(firstStart && !weatherPref.getCity().equals(""))
 		{
-			weatherPref = new WeatherPreferences(getSharedPreferences("weatherPref", MODE_PRIVATE));
 			txtCidade.setText(weatherPref.getCity());
 			firstStart = false;
 			update();
@@ -117,6 +121,9 @@ public class WeatherForecast extends Activity
 		}
 	}
 	
+	/**
+	 * Busca localização atraves do GPS ou Triangulação WiFi
+	 */
 	private void searchLocation()
 	{
 		List<Address> enderecos;
@@ -166,7 +173,6 @@ public class WeatherForecast extends Activity
 		((TextView) findViewById(R.id.weather_today_city)).setText(txtCidade.getText().toString());
 		((TextView) findViewById(R.id.weather_today_condition)).setText(aWCIS.getCondition() + "\n" + getString(R.string.wind) + " " + aWCIS.getWindCondition() + "\n" + getString(R.string.humidity) + ": " + aWCIS.getHumidity());
 		((TextView) findViewById(R.id.lblProximosDias)).setText(getString(R.string.nextDays));
-		
 	}
 
 	/**
@@ -183,10 +189,12 @@ public class WeatherForecast extends Activity
 		((WeatherLine) findViewById(R.id.weather_3)).reset();
 	}
 
+	/**
+	 * Realiza a busca da previsão do tempo, quando tempo da ultima busca for inferior a 1,5hrs utiliza cache, senão
+	 * faz uma nova consulta ao serviço
+	 */
 	private void searchWeatherInfo()
 	{
-		WeatherSet ws = null;
-
 		try
 		{
 			
@@ -194,7 +202,7 @@ public class WeatherForecast extends Activity
 			{
 				if((System.currentTimeMillis() - weatherPref.getLastUpdate().getTime()) > 1800000)
 				{
-					ws = getWeatherSet(txtCidade.getText().toString());
+					ws = decoder.getWeatherSet(txtCidade.getText().toString());
 					saveCache(ws);
 				}
 				else{
@@ -204,66 +212,48 @@ public class WeatherForecast extends Activity
 			else
 			{
 				weatherPref.setCity(txtCidade.getText().toString());
-				ws = getWeatherSet(txtCidade.getText().toString());
+				ws = decoder.getWeatherSet(txtCidade.getText().toString());
 				saveCache(ws);
-			}
-			if (ws != null)
-			{
-				updateWeatherInfoView(ws.getWeatherCurrentCondition());
-				updateWeatherInfoView(R.id.weather_1, ws.getWeatherForecastConditions().get(1));
-				updateWeatherInfoView(R.id.weather_2, ws.getWeatherForecastConditions().get(2));
-				updateWeatherInfoView(R.id.weather_3, ws.getWeatherForecastConditions().get(3));
-				((TextView)findViewById(R.id.lblAtualizacao)).setText(getString(R.string.lastUpdate) + ": " + new SimpleDateFormat("dd/MM/yyyy HH:mm").format(weatherPref.getLastUpdate()));
 				WeatherForecast.this.startService(new Intent(WeatherForecast.this, UpdateService.class));
 			}
-			else
-				WeatherUtils.showMessage(WeatherForecast.this, getString(R.string.forecastNotFound));
 		}
 		catch (Exception e)
 		{
-			WeatherUtils.showMessage(WeatherForecast.this, e.getMessage());
 			Log.e(WeatherForecast.DEBUG_TAG, e.getMessage(), e);
 		}
 	}
-
-	public WeatherSet getWeatherSet(String cityParam) throws InterruptedException, ExecutionException
-	{
-		WundergroundDecoder decoder = new WundergroundDecoder(WeatherForecast.this);
-		decoder.execute(cityParam); 
-		
-		return decoder.get();
-	}
 	
+	/**
+	 * Inicializa a execução da Thread de processamento
+	 */
 	private void update()
-	{
-		Thread t; 
-		final ProgressDialog processDialog;
-		final Handler handler = new Handler();
-		
-		if (txtCidade.getText().toString().equals(""))
-			WeatherUtils.showMessage(WeatherForecast.this, getString(R.string.enterCity));
-		else
-		{
-			processDialog = ProgressDialog.show(WeatherForecast.this, "", getString(R.string.processMsg));
-			t = new Thread(){
-				@Override
-				public void run()
-				{
-					handler.post(new Runnable()
-					{
-					@Override
-						public void run()
-						{
-							searchWeatherInfo();
-						}
-					});
-					processDialog.dismiss();
-				}
-			};
-			t.start();
-		}
+	{		
+		new Progress().execute();
 	}
 	
+	/**
+	 * Atualiza Objetos da Tela
+	 * @throws ParseException
+	 */
+	private void updateView() throws ParseException
+	{
+		if (ws != null)
+		{
+			updateWeatherInfoView(ws.getWeatherCurrentCondition());
+			updateWeatherInfoView(R.id.weather_1, ws.getWeatherForecastConditions().get(1));
+			updateWeatherInfoView(R.id.weather_2, ws.getWeatherForecastConditions().get(2));
+			updateWeatherInfoView(R.id.weather_3, ws.getWeatherForecastConditions().get(3));
+			((TextView)findViewById(R.id.lblAtualizacao)).setText(getString(R.string.lastUpdate) + ": " + new SimpleDateFormat("dd/MM/yyyy HH:mm").format(weatherPref.getLastUpdate()));
+		}
+		else
+			WeatherUtils.showMessage(WeatherForecast.this, getString(R.string.forecastNotFound));
+	}
+	
+	/**
+	 * Salva classe serializada no Cache
+	 * @param weatherset
+	 * @throws IOException
+	 */
 	private void saveCache(WeatherSet weatherset) throws IOException
 	{
 		File cache = new File(getCacheDir(), "cache.dat");
@@ -275,6 +265,16 @@ public class WeatherForecast extends Activity
 		weatherPref.setLastUpdate(new Date(System.currentTimeMillis()));
 	}
 	
+	/**
+	 * Recupera classe serializada do cache
+	 * @return
+	 * @throws FileNotFoundException
+	 * @throws IOException
+	 * @throws ClassNotFoundException
+	 * @throws JSONException
+	 * @throws InterruptedException
+	 * @throws ExecutionException
+	 */
 	private WeatherSet restoreCache() throws FileNotFoundException, IOException, ClassNotFoundException, JSONException, InterruptedException, ExecutionException
 	{
 		File cache = new File(getCacheDir(), "cache.dat");
@@ -288,7 +288,7 @@ public class WeatherForecast extends Activity
 			out.close();
 		}
 		if(ws == null)
-			ws = getWeatherSet(txtCidade.getText().toString());
+			ws = decoder.getWeatherSet(txtCidade.getText().toString());
 		return ws;
 	}
 	
@@ -326,6 +326,46 @@ public class WeatherForecast extends Activity
 				}
 			}
 			return retorno;
+		}
+	}
+	
+	/**
+	 * Thread para controlar a chamada ao serviço e atualização da tela
+	 * @author Felipe Cobello
+	 *
+	 */
+	private class Progress extends AsyncTask<Void, String, Void>
+	{
+		ProgressDialog dialog = new ProgressDialog(WeatherForecast.this);
+		
+		@Override
+		protected void onPreExecute() {
+			dialog.setMessage(getString(R.string.processMsg));
+			dialog.setCancelable(false);
+			dialog.show();
+		}
+		
+		@Override
+		protected void onPostExecute(Void result) {
+			try {
+				updateView();
+			} catch (ParseException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			dialog.dismiss();
+		}
+		
+		@Override
+		protected Void doInBackground(Void... params) {
+			publishProgress(getString(R.string.processMsg));
+			searchWeatherInfo();
+			return null;
+		}
+		
+		@Override
+		protected void onProgressUpdate(String... values) {
+			dialog.setMessage(getString(R.string.processMsg));
 		}
 	}
 }

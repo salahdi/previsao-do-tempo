@@ -3,16 +3,8 @@ package br.com.android.weatherforecast.weather;
 import java.io.Serializable;
 import java.util.ArrayList;
 
-/**
- * Combines one WeatherCurrentCondition with a List of
- * WeatherForecastConditions.
- */
 public class WeatherSet implements Serializable
 {
-
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = -4485037818705561060L;
 	private WeatherForecastInformation myForecastInformation = null;
 	private WeatherCurrentCondition myCurrentCondition = null;

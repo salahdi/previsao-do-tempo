@@ -21,4 +21,5 @@
 <string name="rain">Chuva</string>
 <string name="icon">Ícone</string>
 <string name="initialTemp">0 ºC</string>
+<string name="unknown">Desconhecido</string>
 </resources>

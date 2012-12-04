@@ -2,10 +2,6 @@ package br.com.android.weatherforecast.weather;
 
 import java.io.Serializable;
 
-/**
- * Holds the information between the <forecast_conditions>-tag of what the
- * Google Weather API returned.
- */
 public class WeatherForecastCondition implements Serializable
 {
 	/**
