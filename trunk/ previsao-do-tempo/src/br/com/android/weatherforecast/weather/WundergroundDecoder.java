@@ -13,17 +13,13 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.content.Context;
-import android.os.AsyncTask;
-import android.util.Log;
-import android.widget.Toast;
 import br.com.android.weatherforecast.R;
-import br.com.android.weatherforecast.WeatherForecast;
 
-public class WundergroundDecoder extends AsyncTask<String, Void, WeatherSet>{
+public class WundergroundDecoder{
 	
 	private WeatherSet weatherSet = new WeatherSet();
+	private String[] keys = new String[]{"5cbebed2c0375bea", "26d700ac14bcb117", "e4865d05203ea310", "3b4c8a9e1bc83dd5"};
 	private Context context;
-	String[] keys = new String[]{"1e37ada8b850301c", "5cbebed2c0375bea", "26d700ac14bcb117"};
 	
 	public WundergroundDecoder(Context context) {
 		this.context = context;
@@ -36,8 +32,8 @@ public class WundergroundDecoder extends AsyncTask<String, Void, WeatherSet>{
 		StringBuilder response = new StringBuilder();
 		URLConnection connection;
 		BufferedReader reader;
-		String keyC = keys[(int) (1 + (3*Math.random())) - 1];
-		String keyF = keys[(int) (1 + (3*Math.random())) - 1];
+		String keyC = keys[(int) (1 + (4*Math.random())) - 1];
+		String keyF = keys[(int) (1 + (4*Math.random())) - 1];
 
 		if (cityParam.equals(""))
 			return weatherSet;
@@ -71,7 +67,7 @@ public class WundergroundDecoder extends AsyncTask<String, Void, WeatherSet>{
 		JSONObject condition = (JSONObject) json.get("current_observation");
 		
 		current.setTempCelcius(condition.getInt("temp_c"));
-		current.setCondition(condition.getString("weather"));
+		current.setCondition(condition.getString("weather").equals("") ? context.getString(R.string.unknown):condition.getString("weather"));
 		current.setWindCondition(condition.getString("wind_dir") + " a " + condition.getString("wind_kph") + " km/h");
 		current.setIconURL(condition.getString("icon"));
 		current.setHumidity(condition.getString("relative_humidity"));
@@ -98,21 +94,5 @@ public class WundergroundDecoder extends AsyncTask<String, Void, WeatherSet>{
 			dayForecast.setPrecipitation(day.getString("pop") + "%");
 			weatherSet.getWeatherForecastConditions().add(dayForecast);
 		}
-	}
-
-	@Override
-	protected WeatherSet doInBackground(String... params) {
-		WeatherSet ws = null;
-		
-		try {
-			ws = getWeatherSet(params[0]);
-		} catch (MalformedURLException e) {
-			Log.e(WeatherForecast.DEBUG_TAG, e.getMessage(), e);
-		} catch (IOException e) {
-			Toast.makeText(context, context.getString((R.string.internetErrorMsg)), Toast.LENGTH_LONG).show();
-		} catch (JSONException e) {
-			e.printStackTrace();
-		}
-		return ws;
 	}
 }

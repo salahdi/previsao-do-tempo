@@ -2,15 +2,10 @@ package br.com.android.weatherforecast.weather;
 
 import java.io.Serializable;
 
-/**
- * Holds the information between the <current_conditions>-tag of what the Google
- * Weather API returned.
- */
+
 public class WeatherCurrentCondition implements Serializable
 {
-	/**
-	 * 
-	 */
+
 	private static final long serialVersionUID = 5206229675857496330L;
 	private String dayofWeek = null;
 	private Integer tempCelcius = null;

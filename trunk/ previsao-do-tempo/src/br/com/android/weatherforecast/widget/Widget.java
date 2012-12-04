@@ -7,6 +7,7 @@ import android.appwidget.AppWidgetProvider;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.os.IBinder;
 import android.util.Log;
 import android.widget.RemoteViews;
@@ -15,11 +16,11 @@ import br.com.android.weatherforecast.WeatherForecast;
 import br.com.android.weatherforecast.weather.WeatherIcons;
 import br.com.android.weatherforecast.weather.WeatherPreferences;
 import br.com.android.weatherforecast.weather.WeatherSet;
+import br.com.android.weatherforecast.weather.WundergroundDecoder;
 
 /**
  * Classe para Gerenciamento do Widget de Previsão do Tempo
  * @author Felipe Cobello
- * @version 1.0
  */
 public class Widget extends AppWidgetProvider
 {
@@ -32,22 +33,17 @@ public class Widget extends AppWidgetProvider
 	/**
 	 * Classe para o Gerencimento do Serviço Atualização
 	 * @author Felipe Cobello
-	 * @version 1.0
 	 */
 	public static class UpdateService extends Service
 	{
 		private WeatherPreferences weatherPref;
+		private WeatherSet weatherSet;
 		
 		@Override
 		public void onStart(Intent intent, int startId)
 		{
-			RemoteViews updateViews;
-			ComponentName thisWidget = new ComponentName(this, Widget.class);
-			AppWidgetManager manager = AppWidgetManager.getInstance(this);
-
 			weatherPref = new WeatherPreferences(getSharedPreferences("weatherPref", MODE_PRIVATE));
-			updateViews = buildUpdate(this);
-			manager.updateAppWidget(thisWidget, updateViews);
+			new Progress().execute();
 		}
 
 		/**
@@ -74,17 +70,16 @@ public class Widget extends AppWidgetProvider
 			RemoteViews updateViews = new RemoteViews(context.getPackageName(), R.layout.widget);
 			Intent defineIntent = new Intent(context, WeatherForecast.class);
 			PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, defineIntent, 0);
-			WeatherSet weather;
 
 			try
 			{
-				weather = new WeatherForecast().getWeatherSet(city);
 				updateViews.setOnClickPendingIntent(R.id.widget, pendingIntent);
-				if (weather != null)
+				if (weatherSet != null)
 				{
-					updateViews.setTextViewText(R.id.definition, weather.getWeatherCurrentCondition().getTempCelcius() + "°C");
+					updateViews.setTextViewText(R.id.definition, weatherSet.getWeatherCurrentCondition().getTempCelcius() + "°C");
 					updateViews.setTextViewText(R.id.city, weatherPref.getCity());
-					updateViews.setImageViewResource(R.id.background, WeatherIcons.getImageDrawable(weather.getWeatherCurrentCondition().getIconURL()));
+					updateViews.setTextViewText(R.id.condition, weatherSet.getWeatherCurrentCondition().getCondition());
+					updateViews.setImageViewResource(R.id.background, WeatherIcons.getImageDrawable(weatherSet.getWeatherCurrentCondition().getIconURL()));
 				}
 			}
 			catch (Exception e)
@@ -98,6 +93,32 @@ public class Widget extends AppWidgetProvider
 		public IBinder onBind(Intent intent)
 		{
 			return null;
+		}
+
+		private class Progress extends AsyncTask<Void, String, Void>
+		{
+			@Override
+			protected void onPostExecute(Void result) {
+				RemoteViews updateViews;
+				ComponentName thisWidget = new ComponentName(UpdateService.this, Widget.class);
+				AppWidgetManager manager = AppWidgetManager.getInstance(UpdateService.this);
+				
+				updateViews = buildUpdate(UpdateService.this);
+				manager.updateAppWidget(thisWidget, updateViews);
+			}
+			
+			@Override
+			protected Void doInBackground(Void... params) 
+			{
+				WundergroundDecoder decoder = new WundergroundDecoder(UpdateService.this);
+				
+				try {
+					weatherSet = decoder.getWeatherSet(weatherPref.getCity());
+				} catch (Exception e) {
+					Log.e(WeatherForecast.DEBUG_TAG, e.getMessage(), e);
+				}
+				return null;
+			}
 		}
 	}
 }
