@@ -227,8 +227,11 @@ public class WeatherForecast extends Activity
 	 * Inicializa a execução da Thread de processamento
 	 */
 	private void update()
-	{		
-		new Progress().execute();
+	{	
+		if(txtCidade.getText().toString().equals(""))
+			WeatherUtils.showMessage(WeatherForecast.this, getString(R.string.enterCity));
+		else
+			new Progress().execute();
 	}
 	
 	/**
